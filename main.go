@@ -26,59 +26,60 @@ var words = []string{
     "road",
 }
 
-var permsChan = make(chan []int, 100)
+var permChan = make(chan []int, 100)
 var top = NewTopList()
 var wg sync.WaitGroup
 
 func main() {
-    fileBytes := []byte(strings.ToLower("TSESBCATEORHTSTOKROTNOIHTASDOFOTASETNTIATWHDIBEDODSHNE"))
+    fileBytes := []byte(strings.ToLower("TSCAE EWTHTOMNTCNXI D IHA XSOIBNEURX FNODNSOXI GSA EAXST TLT DX HPOEHA XAERC ENRX  OKAM OXTDG N TAXEERLDBOSX"))
     input := string(fileBytes)
 
+    go generateSequential(100)
     wg.Add(1)
-    go generatePerms(12)
+    go generatePerm(10)
 
-    threads := 20
+    threads := 8
     for i := 0; i < threads; i++ {
         wg.Add(1)
-    	go consumePermsChan(input)
+        go consumePermChan(input)
     }
     wg.Wait()
     log.Println("Done")
     log.Printf("Top 100: %+v\n", top)
 }
 
-func consumePermsChan(input string) {
-	for {
-        perm, open := <- permsChan
+func consumePermChan(input string) {
+    for {
+        perm, open := <- permChan
         if (!open) {
             break
         }
 
-        //log.Println(perm)
-		decoded := decode(input, perm)
-		fitness := determineFitness(decoded)
-		if fitness > 5 {
-			top.Add(ListElem{decoded,fitness})
-			//log.Printf("Got a potential match with %v: %s\n ", perm, decoded)
-		}
-	}
-	wg.Done()
+        decoded := decode(input, perm)
+        fitness := determineFitness(decoded)
+        if fitness > 5 {
+            top.Add(ListElem{decoded,fitness,perm})
+        }
+    }
+    wg.Done()
 }
 
 func decode(input string, perm []int) string {
-	cols := len(perm)
-	rows := int(math.Ceil(float64(len(input))/float64(cols)))
+    cols := len(perm)
+    rows := int(math.Ceil(float64(len(input))/float64(cols)))
 
-	matrix := make([][]rune, rows)
-	for i := 0; i < rows; i++ {
-		matrix[i] = make([]rune, cols)
-	}
+    matrix := make([][]rune, rows)
+    for i := 0; i < rows; i++ {
+        matrix[i] = make([]rune, cols)
+    }
 
-	for pos, char := range input {
+    for pos, char := range input {
         row := (pos % rows)
         col := (pos / rows)
-		matrix[row][col] = char
-	}
+        matrix[row][col] = char
+    }
+
+    matrix = reorderColumns(matrix, perm)
 
     // for _, a := range matrix {
     //     acc := ""
@@ -98,12 +99,28 @@ func decode(input string, perm []int) string {
     return acc
 }
 
-func reorderColumns(matrix [][]int, perms []int) [][]int {
-    moves := make([]int, len(perms))
-    for i := 0; i < len(perms); i++ {
-        idx := indexOf(i, perms)
-        moves[perms[idx]] = idx
+func reorderColumns(matrix [][]rune, perm []int) [][]rune {
+    moves := make([]int, len(perm))
+    for i := 0; i < len(perm); i++ {
+        idx := indexOf(i, perm)
+        moves[i] = idx
     }
+
+    cols := len(perm)
+    rows := len(matrix)
+    newMatrix := make([][]rune, rows)
+    for i := 0; i < rows; i++ {
+        newMatrix[i] = make([]rune, cols)
+    }
+
+    for toColumn := 0; toColumn < len(perm); toColumn++ {
+        fromColumn := moves[toColumn]
+        for i := 0; i < rows; i++ {
+            newMatrix[i][toColumn] = matrix[i][fromColumn]
+        }
+    }
+
+    return newMatrix
 }
 
 func indexOf(target int, list []int) int {
@@ -125,9 +142,21 @@ func determineFitness(str string) int {
     return fitness
 }
 
-func generatePerms(maxLength int) {
+func generateSequential(maxLength int) {
+    for length := 1; length < maxLength; length++ {
+        elements := make([]int, length)
+        for i := 0; i < length; i++ {
+            elements[i] = i
+        }
+        permChan <- elements
+    }
+    log.Printf("Trying sequential keys up to length %d\n", maxLength)
+}
+
+func generatePerm(maxLength int) {
     for length := 1; length < maxLength; length++ {
         log.Printf("Trying difficulty %d\n", length)
+
         elements := make([]int, length)
         for i := 0; i < length; i++ {
             elements[i] = i
@@ -135,11 +164,13 @@ func generatePerms(maxLength int) {
 
         p := prmt.New(prmt.IntSlice(elements))
         for p.Next() {
-            //log.Println(elements)
-    		permsChan <- elements
-    	}
+            tmp := make([]int, len(elements))
+            copy(tmp, elements)
+            permChan <- tmp
+        }
     }
-    close(permsChan)
+
+    close(permChan)
 
     wg.Done()
 }
