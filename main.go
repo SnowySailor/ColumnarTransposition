@@ -51,38 +51,41 @@ var words = []string{
     "steal",
 }
 
-var permChan = make(chan []int, 100)
+var permsChan = make(chan []int, 100)
 var top = NewTopList()
 var wg sync.WaitGroup
 
 func main() {
-    fileBytes := []byte(strings.ToLower("IA EDR CI HEAN RXIE EGRSLAD BEOASX TFDNGO DNN STOAXS O IOBKNAEMU ROXTSSTC ATEL TE WDTH THOPMONETHCAN X"))
+    fileString := strings.ToLower("HE T IA T RIEEC TTTE E D TRR SSBSRMAO IEIALODTUTUGBRAGEUOPEEI OEARSOTETLNESNMT TNM ST CITPSGRISN ECTBNNE A G   TE  YRSBSLUCE O ONM  INRL LSTUTLLO YSV IIH O EYESPEASECYTOVT UIIHERWG SUHTUSTLU  IFUTGENPDM I HN EU H NNO CMF TPEOU REL  T A STARILEICS S OFAOSMAS IONTTENDSYETHE A    O THYRSIEONAI  SB  O P FE EOEWGTD RGDT SAS TRA HGESDLTNER IIS PE NPAOTFENT HNPG  PEMHIDRRNSTA GSTOEACE  URI S OWAYRRTFGCTMAOPTARL IT U  TLNEL  TNERW AAUEHIA LSBLAEES E  T NA SHN IO BTN STTBNOROKEAIRE UGBAETEYMF CE PEL CIASHIETLGSCTRESLAEHEEC A DMTIRLDSAIEDYLMAEHDT H E RTU AR")
+    fileBytes := []byte(fileString)
     input := string(fileBytes)
+
+    log.Printf("Trying to decode data: %s\n", fileString)
 
     go generateSequential(100)
     wg.Add(1)
-    go generatePerm(10)
+    go generatePerms(9)
 
     threads := 8
     for i := 0; i < threads; i++ {
         wg.Add(1)
-        go consumePermChan(input)
+        go consumePermsChan(input)
     }
     wg.Wait()
     log.Println("Done")
     log.Printf("Top 100: %+v\n", top)
 }
 
-func consumePermChan(input string) {
+func consumePermsChan(input string) {
     for {
-        perm, open := <- permChan
+        perm, open := <- permsChan
         if (!open) {
             break
         }
 
         decoded := decode(input, perm)
         fitness := determineFitness(decoded)
-        if fitness > 3 {
+        if fitness > 5 {
             top.Add(ListElem{decoded,fitness,perm})
         }
     }
@@ -172,12 +175,12 @@ func generateSequential(maxLength int) {
         for i := 0; i < length; i++ {
             elements[i] = i
         }
-        permChan <- elements
+        permsChan <- elements
     }
     log.Printf("Trying sequential keys up to length %d\n", maxLength)
 }
 
-func generatePerm(maxLength int) {
+func generatePerms(maxLength int) {
     for length := 1; length <= maxLength; length++ {
         log.Printf("Trying difficulty %d\n", length)
 
@@ -190,11 +193,11 @@ func generatePerm(maxLength int) {
         for p.Next() {
             tmp := make([]int, len(elements))
             copy(tmp, elements)
-            permChan <- tmp
+            permsChan <- tmp
         }
     }
 
-    close(permChan)
+    close(permsChan)
 
     wg.Done()
 }
