@@ -31,16 +31,11 @@ var top = NewTopList()
 var wg sync.WaitGroup
 
 func main() {
-    //decode("TSESBCATEORHTSTOKROTNOIHTASDOFOTASETNTIATWHDIBEDODSHNE", []int{1,2,3,4,5})
-    //decode("TSESBCATEORHTSTOKROTNOIHTASDOFOTASETNTIATWHDIBEDODSHNE", []int{1,2,3,4,5})
-    fileBytes := []byte(strings.ToLower("TSESBCATEORHTSTOKROTNOIHTASDOFOTASETNTIATWHDIBEDODSHNE")) //ioutil.ReadFile("input.txt")
-    // if err != nil {
-    //     log.Fatal(err)
-    // }
+    fileBytes := []byte(strings.ToLower("TSESBCATEORHTSTOKROTNOIHTASDOFOTASETNTIATWHDIBEDODSHNE"))
     input := string(fileBytes)
 
     wg.Add(1)
-    go generatePerms(9)
+    go generatePerms(12)
 
     threads := 20
     for i := 0; i < threads; i++ {
@@ -101,6 +96,23 @@ func decode(input string, perm []int) string {
     }
 
     return acc
+}
+
+func reorderColumns(matrix [][]int, perms []int) [][]int {
+    moves := make([]int, len(perms))
+    for i := 0; i < len(perms); i++ {
+        idx := indexOf(i, perms)
+        moves[perms[idx]] = idx
+    }
+}
+
+func indexOf(target int, list []int) int {
+    for idx, i := range list {
+        if i == target {
+            return idx
+        }
+    }
+    return -1
 }
 
 func determineFitness(str string) int {
