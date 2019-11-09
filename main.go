@@ -24,6 +24,31 @@ var words = []string{
     "because",
     "be",
     "road",
+    "have",
+    "in",
+    "good",
+    "time",
+    "person",
+    "people",
+    "first",
+    "new",
+    "world",
+    "man",
+    "thing",
+    "day",
+    "way",
+    "make",
+    "know",
+    "about",
+    "into",
+    "over",
+    "after",
+    "work",
+    "look",
+    "want",
+    "give",
+    "take",
+    "steal",
 }
 
 var permChan = make(chan []int, 100)
@@ -31,7 +56,7 @@ var top = NewTopList()
 var wg sync.WaitGroup
 
 func main() {
-    fileBytes := []byte(strings.ToLower("TSCAE EWTHTOMNTCNXI D IHA XSOIBNEURX FNODNSOXI GSA EAXST TLT DX HPOEHA XAERC ENRX  OKAM OXTDG N TAXEERLDBOSX"))
+    fileBytes := []byte(strings.ToLower("IA EDR CI HEAN RXIE EGRSLAD BEOASX TFDNGO DNN STOAXS O IOBKNAEMU ROXTSSTC ATEL TE WDTH THOPMONETHCAN X"))
     input := string(fileBytes)
 
     go generateSequential(100)
@@ -57,7 +82,7 @@ func consumePermChan(input string) {
 
         decoded := decode(input, perm)
         fitness := determineFitness(decoded)
-        if fitness > 5 {
+        if fitness > 3 {
             top.Add(ListElem{decoded,fitness,perm})
         }
     }
@@ -102,8 +127,7 @@ func decode(input string, perm []int) string {
 func reorderColumns(matrix [][]rune, perm []int) [][]rune {
     moves := make([]int, len(perm))
     for i := 0; i < len(perm); i++ {
-        idx := indexOf(i, perm)
-        moves[i] = idx
+        moves[perm[i]] = i
     }
 
     cols := len(perm)
@@ -143,7 +167,7 @@ func determineFitness(str string) int {
 }
 
 func generateSequential(maxLength int) {
-    for length := 1; length < maxLength; length++ {
+    for length := 1; length <= maxLength; length++ {
         elements := make([]int, length)
         for i := 0; i < length; i++ {
             elements[i] = i
@@ -154,7 +178,7 @@ func generateSequential(maxLength int) {
 }
 
 func generatePerm(maxLength int) {
-    for length := 1; length < maxLength; length++ {
+    for length := 1; length <= maxLength; length++ {
         log.Printf("Trying difficulty %d\n", length)
 
         elements := make([]int, length)
