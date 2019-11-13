@@ -7,6 +7,7 @@ import (
     "sync"
     "math"
     "log"
+    // "time"
 )
 
 var words = []string{
@@ -49,6 +50,8 @@ var words = []string{
     "give",
     "take",
     "steal",
+    "this",
+    "test",
 }
 
 var permsChan = make(chan []int, 100)
@@ -56,7 +59,7 @@ var top = NewTopList()
 var wg sync.WaitGroup
 
 func main() {
-    fileString := strings.ToLower("HE T IA T RIEEC TTTE E D TRR SSBSRMAO IEIALODTUTUGBRAGEUOPEEI OEARSOTETLNESNMT TNM ST CITPSGRISN ECTBNNE A G   TE  YRSBSLUCE O ONM  INRL LSTUTLLO YSV IIH O EYESPEASECYTOVT UIIHERWG SUHTUSTLU  IFUTGENPDM I HN EU H NNO CMF TPEOU REL  T A STARILEICS S OFAOSMAS IONTTENDSYETHE A    O THYRSIEONAI  SB  O P FE EOEWGTD RGDT SAS TRA HGESDLTNER IIS PE NPAOTFENT HNPG  PEMHIDRRNSTA GSTOEACE  URI S OWAYRRTFGCTMAOPTARL IT U  TLNEL  TNERW AAUEHIA LSBLAEES E  T NA SHN IO BTN STTBNOROKEAIRE UGBAETEYMF CE PEL CIASHIETLGSCTRESLAEHEEC A DMTIRLDSAIEDYLMAEHDT H E RTU AR")
+    fileString := strings.ToLower("TIQ  HC   D UOK  KTTERKKLNABCXSACS DERORAC OXI IEF DOOOMEETXHSUTOEOWLW BSSX")
     fileBytes := []byte(fileString)
     input := string(fileBytes)
 
@@ -66,7 +69,7 @@ func main() {
     wg.Add(1)
     go generatePerms(9)
 
-    threads := 8
+    threads := 6
     for i := 0; i < threads; i++ {
         wg.Add(1)
         go consumePermsChan(input)
@@ -83,14 +86,73 @@ func consumePermsChan(input string) {
             break
         }
 
-        decoded := decode(input, perm)
+        decoded := columnDecrypt(input, perm)
         fitness := determineFitness(decoded)
-        if fitness > 5 {
+        if fitness > 0 {
             top.Add(ListElem{decoded,fitness,perm})
         }
     }
     wg.Done()
 }
+
+func columnDecrypt(s1 string, perm []int) string {
+    input := strings.ToUpper(s1)
+    input_length := len(input)
+    
+    cols := len(perm)
+    rows := int(math.Ceil(float64(input_length)/float64(cols)))
+
+    for {
+        if input_length % cols == 0 { break; }
+        input_length = input_length + 1
+    }
+    input_length = input_length - len(input) + 1
+    
+    mainArray := make([][]rune, rows)
+    for i := 0; i < rows; i++ {
+        mainArray[i] = make([]rune, cols + 1)
+        for s := 0; s < cols + 1; s++ {
+            mainArray[i][s] = rune(0)
+        }
+    }
+    
+    for j := 0; j < input_length; j++ {
+        mainArray[rows - 1][cols - j] = rune(6969)
+    }
+
+    kc := 0;
+    q := 0;
+    for {
+        if kc >= len(perm) { break; }
+        for i := 0; i < len(perm); i++ {
+            if perm[i] == kc {
+                for j := 0; j < rows; j++ {
+                    if mainArray[j][i] == rune(0) {
+                        mainArray[j][i] = rune(input[q])
+                        q = q + 1
+                    }
+                }
+                kc = kc + 1
+            }
+        }
+    }
+
+    for j := 0; j < cols + 1; j++ {
+        if mainArray[rows-1][j] == rune(6969) {
+            mainArray[rows-1][j] = rune(0)
+        }
+    }
+    
+    ptext := ""
+    for _, row := range mainArray {
+        for _, char := range row {
+            ptext += string(char)
+        }
+    }
+
+    return strings.ToLower(ptext)
+}
+
 
 func decode(input string, perm []int) string {
     cols := len(perm)
