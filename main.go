@@ -64,7 +64,7 @@ var top = NewTopList()
 var wg sync.WaitGroup
 
 func main() {
-    fileString := strings.ToLower("LMYAAKIRNPOEWTVTTTXRTUVFSTSSUERRHIOOEEAIUMTAKOAEWMOEATRESETGEATAHTTREHDGUOSLIYHEMBGRSALBUIAETNXNOAAIYAETYDECLBDHNXHESDLENTALUMMAEHOUX")
+    fileString := strings.ToLower("YOUR CODE HERE")
     fileBytes := []byte(fileString)
     input := string(fileBytes)
 
