@@ -2,12 +2,10 @@ package main
 
 import (
     "strings"
-    //"io/ioutil"
     prmt "github.com/gitchander/permutation"
     "sync"
     "math"
     "log"
-    // "time"
 )
 
 var words = []string{
@@ -52,6 +50,13 @@ var words = []string{
     "steal",
     "this",
     "test",
+    "normies",
+    "friendo",
+    "dnd",
+    "blaise",
+    "character",
+    "dungeon",
+    "master",
 }
 
 var permsChan = make(chan []int, 100)
@@ -59,7 +64,7 @@ var top = NewTopList()
 var wg sync.WaitGroup
 
 func main() {
-    fileString := strings.ToLower("TIQ  HC   D UOK  KTTERKKLNABCXSACS DERORAC OXI IEF DOOOMEETXHSUTOEOWLW BSSX")
+    fileString := strings.ToLower("LMYAAKIRNPOEWTVTTTXRTUVFSTSSUERRHIOOEEAIUMTAKOAEWMOEATRESETGEATAHTTREHDGUOSLIYHEMBGRSALBUIAETNXNOAAIYAETYDECLBDHNXHESDLENTALUMMAEHOUX")
     fileBytes := []byte(fileString)
     input := string(fileBytes)
 
@@ -88,7 +93,7 @@ func consumePermsChan(input string) {
 
         decoded := columnDecrypt(input, perm)
         fitness := determineFitness(decoded)
-        if fitness > 0 {
+        if fitness >= 3 {
             top.Add(ListElem{decoded,fitness,perm})
         }
     }
@@ -151,74 +156,6 @@ func columnDecrypt(s1 string, perm []int) string {
     }
 
     return strings.ToLower(ptext)
-}
-
-
-func decode(input string, perm []int) string {
-    cols := len(perm)
-    rows := int(math.Ceil(float64(len(input))/float64(cols)))
-
-    matrix := make([][]rune, rows)
-    for i := 0; i < rows; i++ {
-        matrix[i] = make([]rune, cols)
-    }
-
-    for pos, char := range input {
-        row := (pos % rows)
-        col := (pos / rows)
-        matrix[row][col] = char
-    }
-
-    matrix = reorderColumns(matrix, perm)
-
-    // for _, a := range matrix {
-    //     acc := ""
-    //     for _, b := range a {
-    //         acc = acc + string(b)
-    //     }
-    //     log.Println(acc)
-    // }
-
-    acc := ""
-    for i := 0; i < rows; i++ {
-        for j := 0; j < cols; j++ {
-            acc += string(matrix[i][j])
-        }
-    }
-
-    return acc
-}
-
-func reorderColumns(matrix [][]rune, perm []int) [][]rune {
-    moves := make([]int, len(perm))
-    for i := 0; i < len(perm); i++ {
-        moves[perm[i]] = i
-    }
-
-    cols := len(perm)
-    rows := len(matrix)
-    newMatrix := make([][]rune, rows)
-    for i := 0; i < rows; i++ {
-        newMatrix[i] = make([]rune, cols)
-    }
-
-    for toColumn := 0; toColumn < len(perm); toColumn++ {
-        fromColumn := moves[toColumn]
-        for i := 0; i < rows; i++ {
-            newMatrix[i][toColumn] = matrix[i][fromColumn]
-        }
-    }
-
-    return newMatrix
-}
-
-func indexOf(target int, list []int) int {
-    for idx, i := range list {
-        if i == target {
-            return idx
-        }
-    }
-    return -1
 }
 
 func determineFitness(str string) int {
